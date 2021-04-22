@@ -1,0 +1,106 @@
+#Solution1：（Single table query）
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+    SET N := N-1;
+  RETURN (
+      # Write your MySQL query statement below.
+      SELECT 
+            salary
+      FROM 
+            employee
+      GROUP BY 
+            salary
+      ORDER BY 
+            salary DESC
+      LIMIT N, 1
+  );
+END
+
+#Solution2：（Subquery）
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+  RETURN (
+      # Write your MySQL query statement below.
+      SELECT 
+          DISTINCT e.salary
+      FROM 
+          employee e
+      WHERE 
+          (SELECT count(DISTINCT salary) FROM employee WHERE salary>e.salary) = N-1
+  );
+END
+
+
+#Solution3：（Self-connection）
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+  RETURN (
+      # Write your MySQL query statement below.
+      SELECT 
+          e1.salary
+      FROM 
+          employee e1 JOIN employee e2 ON e1.salary <= e2.salary
+      GROUP BY 
+          e1.salary
+      HAVING 
+          count(DISTINCT e2.salary) = N
+  );
+END
+
+
+
+#Solution4：（Cartesian Product）
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+  RETURN (
+      # Write your MySQL query statement below.
+      SELECT 
+          e1.salary
+      FROM 
+          employee e1, employee e2 
+      WHERE 
+          e1.salary <= e2.salary
+      GROUP BY 
+          e1.salary
+      HAVING 
+          count(DISTINCT e2.salary) = N
+  );
+END
+
+
+
+#Solution5:（Custom variable）
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+  RETURN (
+      # Write your MySQL query statement below.
+      SELECT 
+          DISTINCT salary 
+      FROM 
+          (SELECT 
+                salary, @r:=IF(@p=salary, @r, @r+1) AS rnk,  @p:= salary 
+            FROM  
+                employee, (SELECT @r:=0, @p:=NULL)init 
+            ORDER BY 
+                salary DESC) tmp
+      WHERE rnk = N
+  );
+END
+
+
+#Solution6:(window function)
+CREATE FUNCTION getNthHighestSalary(N INT) RETURNS INT
+BEGIN
+  RETURN (
+      # Write your MySQL query statement below.
+        SELECT 
+            DISTINCT salary
+        FROM 
+            (SELECT 
+                salary, dense_rank() over(ORDER BY salary DESC) AS rnk
+             FROM 
+                employee) tmp
+        WHERE rnk = N
+  );
+END
+
