@@ -1,0 +1,38 @@
+#Solution1
+select max(Salary) as SecondHighestSalary 
+from Employee 
+where Salary<(select max(Salary) from Employee where Salary)
+
+
+
+#Solution2
+select
+(
+    select distinct salary 
+    from employee 
+    order by salary desc 
+    limit 1,1
+) 
+as SecondHighestSalary
+
+
+
+#Solution3
+select
+(
+    select e1.Salary
+    from Employee e1,Employee e2
+    where e1.Salary<=e2.Salary
+    group by e1.Salary
+    having count(distinct e2.Salary)=2
+) as SecondHighestSalary
+
+
+#Solution4
+select
+(
+    select distinct e1.Salary
+    from Employee e1,Employee e2
+    group by e1.Id,e1.Salary
+    having sum(e1.Salary<e2.Salary)=1
+) as SecondHighestSalary
