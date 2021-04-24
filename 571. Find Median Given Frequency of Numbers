@@ -1,0 +1,32 @@
+#The cumulative frequency of the median must be greater than or equal to half of the total number.# 
+The cumulative frequency of the previous number (less than the median) of the median must be less than or equal to half of the total number.#
+
+
+#Solution 1 
+
+select
+avg(Number) median
+from (
+    select
+        Number,
+        Frequency,
+        @sum pre_sum,
+        @sum := Frequency + @sum curr_sum
+    from 
+        Numbers,
+        (select @sum := 0) t
+    order by Number
+) t1 
+where 
+    t1.pre_sum <= (@sum / 2) and 
+    t1.curr_sum >= (@sum / 2)
+
+#Solution 2
+
+select avg(number) as median
+from
+(select number, sum(frequency) over(order by number asc) as asc_amount, 
+                sum(frequency) over(order by number desc) as desc_amount,
+                sum(frequency) over() as total_num
+from numbers) a
+where asc_amount >= total_num/2 and desc_amount >= total_num / 2 
