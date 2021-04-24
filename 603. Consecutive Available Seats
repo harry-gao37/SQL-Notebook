@@ -49,6 +49,17 @@ FROM (
 WHERE cas = 1
 ORDER BY seat_id ASC
 
+select
+    distinct c.seat_id
+from
+    cinema c,
+    (select seat_id, (@cnt:=if(free=1,@cnt+1,0)) as cnt 
+     from cinema,(select @cnt:=0) init) as a
+where
+    a.cnt > 1
+    and
+    c.seat_id between (a.seat_id-a.cnt+1) and a.seat_id 
+
 
 
 # Solution 3
@@ -65,7 +76,15 @@ from (
 where  free=1 and (pre_free=1 or next_free=1 )
 order by  seat_id
 
-
+SELECT seat_id FROM
+    (SELECT *,COUNT(*)OVER(PARTITION BY rk) AS cnt 
+    FROM
+        (SELECT *,(seat_id-ROW_NUMBER()OVER(ORDER BY seat_id ))AS rk 
+        FROM cinema
+        WHERE free>0
+        )a 
+    )b
+WHERE cnt>=2;
 
 
 
