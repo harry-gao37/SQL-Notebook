@@ -1,0 +1,56 @@
+
+
+#Solution 1: Cumulative salary in early N months 
+
+SELECT B.Id as id,B.Month as month,
+(SELECT SUM(e2.Salary) FROM Employee e2 WHERE e2.Id = B.Id AND e2.Month <= B.Month AND e2.Month > B.Month-3 ORDER BY e2.Month DESC LIMIT 3
+) as Salary 
+FROM (
+    SELECT e1.Id,e1.Month,e1.Salary  FROM Employee e1 ,
+    (SELECT e.Id , MAX(e.Month) AS Month FROM Employee e GROUP BY e.Id ) A
+WHERE
+    e1.Id = A.Id  AND e1.Month < A.Month
+ORDER BY  e1.Id ASC,e1.Month DESC
+ ) B 
+
+#Solution 2 
+
+select Id, AccMonth as Month, sum(Salary) as Salary
+from
+(
+    select a.Id as Id, a.Month as AccMonth, b.Month as Month, b.Salary as Salary
+    from 
+    (
+        select Employee.Id as Id, Employee.Month as Month
+        from Employee, (select Id, max(Month) as Month
+            from Employee
+            group by Id) as LastMonth
+            where Employee.Id = LastMonth.Id and Employee.Month != LastMonth.Month) as a 
+    join Employee as b
+    on a.Id = b.Id and a.Month - b.Month <= 2 and a.Month - b.Month >= 0
+) as acc
+group by Id, AccMonth
+order by Id, Month desc
+
+#Solution 3
+SELECT Id, Month,
+        SUM(Salary) OVER(PARTITION BY Id ORDER BY Month ROWS 2 PRECEDING) Salary
+FROM Employee 
+    WHERE (id, Month) NOT IN (SELECT id, MAX(Month) Month
+                        FROM Employee
+                        GROUP BY Id)
+
+ORDER BY Id ASC, Month DESC
+
+
+
+
+
+
+
+
+
+
+
+
+
