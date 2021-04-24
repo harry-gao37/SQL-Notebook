@@ -1,0 +1,13 @@
+# Solution 1
+
+select distinct * from
+(select date_format(s.pay_date, '%Y-%m') as pay_month, 
+        e.department_id, 
+        case when avg(amount) over (partition by e.department_id, s.pay_date) 
+                < avg(amount) over (partition by s.pay_date) then 'lower'
+             when avg(amount) over (partition by e.department_id, s.pay_date) 
+                > avg(amount) over (partition by s.pay_date) then 'higher'
+             else 'same' end as comparison
+from salary s left join employee e
+on s.employee_id = e.employee_id) a
+order by 1 desc
