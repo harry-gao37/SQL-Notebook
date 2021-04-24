@@ -1,0 +1,43 @@
+#Solution 1 
+
+select b.id,b.company,b.salary
+
+from (
+    select id,company,salary,
+    case @com when company then @rk:=@rk+1 else @rk:=1 end rk,
+    @com:=company
+    from employee,(select @rk:=0, @com:='') a
+    order by company,salary) b
+left join 
+    (
+    select company,count(1)/2 cnt from employee group by company) c
+on b.company=c.company
+where b.rk in (cnt+0.5,cnt+1,cnt);
+
+
+#Solution 2
+
+SELECT Id, Company, Salary
+FROM Employee
+WHERE Id in (
+    SELECT e1.Id
+    FROM Employee e1
+    JOIN Employee e2
+    ON e1.Company = e2.Company
+    GROUP BY e1.Id
+    HAVING SUM(CASE WHEN e1.Salary >= e2.Salary THEN 1 ELSE 0 END) >= COUNT(*)/2 
+    AND SUM(CASE WHEN e1.Salary <= e2.Salary THEN 1 ELSE 0 END) >= COUNT(*)/2
+    )
+GROUP BY Company, Salary
+ORDER BY Company
+
+#Solution 3
+
+select Id,Company,Salary from 
+(
+select Id,Company,Salary,
+row_number() over(partition by Company order by Salary) as rnk,
+count(Salary) over(partition by Company) as cnt from Employee 
+) t 
+where rnk in (cnt/2,cnt/2+1,cnt/2+0.5)
+
