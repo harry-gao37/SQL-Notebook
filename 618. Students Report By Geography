@@ -1,0 +1,47 @@
+
+#<PIVOT>#
+
+# Solution 1
+select
+     max(case when continent='America' then name else null end) as America
+    ,max(case when continent='Asia' then name else null end) as Asia
+    ,max(case when continent='Europe' then name else null end) as Europe
+from(
+    select row_number() over(partition by continent order by name) as rn,* from student
+) t
+group by rn
+
+
+
+
+# Solution 2
+
+select 
+max(case continent when 'America' then name else null end) America,
+max(case continent when 'Asia' then name else null end) Asia,
+max(case continent when 'Europe' then name else null end) Europe
+from
+(select name,continent,
+if(@tmp=continent,@rownum:=@rownum+1,@rownum:=1) as rnk,@tmp:=continent from student s1,(select @tmp:=0,@rownum:=1) r1
+order by continent,name asc) t
+group by rnk
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
