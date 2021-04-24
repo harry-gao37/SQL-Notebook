@@ -1,0 +1,82 @@
+# Solution 1 
+
+select distinct c1.seat_id
+from cinema c1, cinema c2
+where abs(c2.seat_id-c1.seat_id)=1
+and c1.free=1 and c2.free=1
+order by c1.seat_id
+
+# Solution 2 
+
+select t1.seat_id
+from (
+         select t1.seat_id, if(t1.free = 0, @cnt1 := 0, @cnt1 := @cnt1 + 1) as cnt
+         from cinema t1,
+              (select @cnt1 := 0 from dual) t2
+     ) t1
+where t1.cnt > 1
+union
+select t2.seat_id
+from (
+         select t1.seat_id, if(t1.free = 0, @cnt := 0, @cnt := @cnt + 1) as cnt
+         from cinema t1,
+              (select @cnt := 0 from dual) t2
+     ) t1 inner join cinema t2 on t1.seat_id = t2.seat_id + 1
+where t1.cnt > 1 and t2.free = 1
+order by 1
+
+
+
+SELECT seat_id
+FROM (
+	SELECT seat_id
+		, if(free_count > 1
+			OR (free_count = 1
+				AND @last_free_count > 1), 1, 0) AS cas
+		, @last_free_count := free_count
+	FROM (
+		SELECT seat_id, free
+			, @free_count := if(free = 1, @free_count + 1, 0) AS free_count
+		FROM cinema, (
+				SELECT @free_count := 0
+			) temp1
+		ORDER BY seat_id ASC
+	) a, (
+			SELECT @last_free_count := 0
+		) temp2
+	ORDER BY seat_id DESC
+) b
+WHERE cas = 1
+ORDER BY seat_id ASC
+
+
+
+# Solution 3
+
+select seat_id
+from (
+    select
+        seat_id ,
+        free ,
+        lag(free,1,999) over() pre_free,
+        lead(free,1,999) over() next_free
+    from  cinema
+)tmp
+where  free=1 and (pre_free=1 or next_free=1 )
+order by  seat_id
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
