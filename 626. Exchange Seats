@@ -1,0 +1,14 @@
+# Solution 1
+
+SELECT (CASE 
+            WHEN MOD(id,2) = 1 AND id = (SELECT COUNT(*) FROM seat) THEN id
+            WHEN MOD(id,2) = 1 THEN id+1
+            ElSE id-1
+        END) AS id, student
+FROM seat
+ORDER BY id;
+
+# Solution 2: xor(Convert to binary，Only the even numbers are subtracted by 2 by the exclusive OR, and the odd numbers remain unchanged, thus adjusting the position.)
+
+select rank() over(order by (id-1)^1) as id,student from seat
+
