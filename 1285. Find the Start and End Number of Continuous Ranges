@@ -1,0 +1,19 @@
+# Solution 1
+
+select min(log_id) as start_id, max(log_id) as end_id
+from
+(select log_id,
+rank() over(order by log_id asc) as ranking
+from logs) a 
+group by (log_id-ranking)
+
+
+# Solution 2
+
+select min(log_id) as start_id,max(log_id) as end_id 
+from
+(select log_id,
+if(@l=log_id-1,@r,@r:=@r+1) as rank,@l:=log_id
+from logs,(select @r:=0,@l:=0) as a) as b
+group by b.rank
+
