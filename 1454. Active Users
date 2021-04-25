@@ -1,0 +1,77 @@
+# Solution 1
+
+SELECT
+    DISTINCT
+    b.id,
+    b.name
+FROM
+    (SELECT
+        id,
+        CASE 
+            WHEN @id = id 
+                AND @prev_date=subdate(login_date, interval 1 day) 
+                AND (@prev_date:= login_date) IS NOT NULL 
+            THEN @cnt := @cnt+1
+            WHEN @id = id 
+                AND @prev_date=subdate(login_date, interval 0 day) 
+            THEN @cnt := @cnt
+        
+            WHEN (@id := id)IS NOT NULL  
+                AND(@prev_date:= login_date) IS NOT NULL 
+            THEN @cnt:=1 
+        END AS cnt
+    FROM 
+        (SELECT * FROM logins ORDER BY id,login_date) a,
+        (SELECT @prev_date:=NULL, @cnt:= NULL, @id:= NULL) t
+    ) a
+LEFT JOIN accounts b ON a.id = b.id
+WHERE 
+    a.cnt>=5
+
+
+
+# Solution 2
+
+with a as (select distinct id, login_date
+from logins)
+
+select distinct t.id, a.name
+from accounts a join 
+(select id, login_date, lead(login_date, 4) over(partition by id order by login_date) as last_date
+from a) t on a.id = t.id
+where datediff(login_date, last_date) = -4
+order by t.id
+
+
+
+# Solution 3
+
+
+SELECT DISTINCT A.*
+FROM Accounts A
+JOIN logins L1 USING(id)
+JOIN Logins L2 ON L1.id=L2.id AND DATEDIFF(L2.login_date,L1.login_date) BETWEEN 0 AND 4  
+GROUP BY A.id,A.name,L1.login_date
+HAVING COUNT(DISTINCT L2.login_date)=5
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
