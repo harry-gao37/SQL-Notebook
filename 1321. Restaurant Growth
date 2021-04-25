@@ -1,0 +1,73 @@
+# Solution 1
+
+select
+    c1.visited_on,sum(c2.amount) as amount,
+    round(sum(c2.amount)/7,2) as average_amount 
+    from (select distinct(visited_on) from Customer)c1 join Customer c2 
+    on datediff(c1.visited_on,c2.visited_on)>=0 
+        and datediff(c1.visited_on,c2.visited_on)<=6
+    group by c1.visited_on
+    having count(distinct c2.visited_on)>=7
+    order by c1.visited_on
+    
+    
+    
+    
+
+# Solution 2
+
+select distinct visited_on,sum_amount as amount,round(average_amount,2) as average_amount 
+from
+(
+    select visited_on,
+        sum(amount) over(order by visited_on rows 6 preceding) as sum_amount,
+        avg(amount) over(order by visited_on rows 6 preceding) as average_amount
+    from(
+         select visited_on,sum(amount) as amount 
+         from Customer
+         group by visited_on
+         )t1
+)t2 
+where datediff(visited_on,(select min(visited_on)from Customer))>=6
+
+
+
+
+
+# Solution 3
+
+
+select visited_on,amount,average_amount from 
+(
+select visited_on,
+row_number() over (order by visited_on) rnum,
+sum(amount) over (order by visited_on rows 6 preceding) amount,
+round(avg(amount) over (order by visited_on rows 6 preceding),2) average_amount 
+from 
+(select visited_on,sum(amount) as amount from Customer group by visited_on order by visited_on) t1
+) t3 where rnum>6
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
