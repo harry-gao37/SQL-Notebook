@@ -1,0 +1,61 @@
+# Solution 1
+
+select user_id seller_id, if(favorite_brand = item_brand, 'yes', 'no') 2nd_item_fav_brand
+from users left join (
+    select o1.seller_id, item_brand
+    from orders o1 
+    join orders o2
+    on o1.seller_id = o2.seller_id
+    join items i
+    on o1.item_id = i.item_id
+    group by o1.order_id
+    having sum(o1.order_date > o2.order_date) = 1
+) tmp
+on user_id = seller_id
+
+
+
+# Solution 2
+
+select user_id seller_id, if(favorite_brand = item_brand, 'yes', 'no') 2nd_item_fav_brand
+from users left join (
+    select seller_id, item_brand
+    from (
+        select o1.seller_id, o1.item_id
+        from orders o1 join orders o2
+        on o1.seller_id = o2.seller_id
+        group by o1.order_id
+        having sum(o1.order_date > o2.order_date) = 1
+    ) o join items i
+    on o.item_id = i.item_id
+) tmp
+on user_id = seller_id 
+
+
+
+
+# Solution 3
+
+select user_id as seller_id,
+if(t.item_brand=u.favorite_brand,'yes','no') 2nd_item_fav_brand
+from Users u
+left join 
+(select o.item_id, i.item_brand, seller_id,
+rank() over (partition by seller_id order by order_date) rk 
+from orders o 
+left join items i 
+on o.item_id=i.item_id) t
+on u.user_id=t.seller_id and rk=2
+
+
+
+
+
+
+
+
+
+
+
+
+
