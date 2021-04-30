@@ -1,0 +1,25 @@
+#The main process: union; using ranking and id to get tag and the same tag is continuous;show the result
+
+
+
+
+# Solution 
+
+SELECT DISTINCT tag period_state,
+        MIN(success_date) OVER (PARTITION BY rk,tag) start_date,
+	MAX(success_date) OVER (PARTITION BY rk,tag) end_date
+FROM (
+	SELECT *, id+1-ranking rk
+	FROM(	
+		SELECT *,ROW_NUMBER() OVER (PARTITION BY tag ORDER BY success_date) ranking,     
+		       ROW_NUMBER() OVER (ORDER BY success_date) id
+		FROM(
+			SELECT *,'succeeded' AS tag FROM succeeded
+			UNION
+			SELECT *,'failed' AS tag FROM failed
+		ORDER BY success_date
+		) t
+	) t2
+) t3
+WHERE YEAR(success_date) = 2019
+ORDER BY start_date
